@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <string.h>
 
 struct student_marks
 {
@@ -19,9 +20,12 @@ int main()
     char key;
     printf("For updating details of a student Enter key 'U'");
     printf("\nFor Removing details of a student Enter key 'R'");
-    printf("\nFor entering the data of student marks Enter key 'M'");
+    printf("\nFor entering the data of student marks press any key");
 
+    printf("\n************************************************************\n");
+    printf("\nPress required key to continue: ");
     scanf("%c",&key);
+
 
     if (key == 'U')
     {
@@ -125,7 +129,7 @@ int main()
 void update_student()
 {
     FILE* fp1 = fopen("marks.txt", "w+");
-    FILE* fp2 = fopen ("temp.txt", "a+"); // Used for updating
+    FILE* fp2 = fopen("temp.txt", "a+"); // Used for updating
     char student_index[12];
     struct student_marks student1;
     struct student_marks student2;
@@ -137,7 +141,9 @@ void update_student()
     {
         if (student1.student_index != student_index)
         {
+            // Hnadle errors
             fwrite(&student1,sizeof(struct student_marks),1,fp2);
+            // strcpy(student2.student_index,student_index);
         }
     }
     Assignment1_update:
@@ -178,12 +184,14 @@ void update_student()
         goto Final_update;
     }
 
+    fprintf(fp2,"\n Marks for the student with Index number %s\n",student_index);
+    fprintf(fp2,"===============================================================================\n");
     int write_ret_update = fprintf(fp2,"\nAssignment 01: %f\n Assignment 02: %f\n Project: %f\n Final Exam: %f\n", student2.assgnmt01_marks, student2.assgnmt02_marks, student2.project_marks, student2.finalExam_marks);
-            
+    // int write_ret_update = fwrite(&student2,sizeof(struct student_marks),1,fp2);     
     if(write_ret_update < 0)
     {
         // Error handling in writing
-        perror("fprintf: ");
+        perror("fwrite: ");
         printf("Updating file error. Error no. %d \n",errno);
         exit(0);
     }
