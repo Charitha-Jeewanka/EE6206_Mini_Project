@@ -36,13 +36,39 @@ int main()
             printf("\n==================================================\n");
             printf("Assignment 01: ");
             scanf("%f",&student.assgnmt01_marks);
-            printf("\nAssignment 02: ");
-            scanf("%f",&student.assgnmt02_marks);
-            printf("\nProject: ");
-            scanf("%f",&student.project_marks);
-            printf("\nFinal Exam: ");
-            scanf("%f",&student.finalExam_marks);
-
+            if (student.assgnmt01_marks > 15)
+            {
+                printf("\nAssignment 01 Marks cannot exceed 15\n");
+            }
+            else
+            {
+                printf("\nAssignment 02: ");
+                scanf("%f",&student.assgnmt02_marks);
+                if (student.assgnmt02_marks > 15)
+                {
+                    printf("\nAssignment 02 Marks cannot exceed 15\n");
+                }
+                else
+                {
+                    printf("\nProject: ");
+                    scanf("%f",&student.project_marks);
+                    if (student.project_marks > 20)
+                    {
+                        printf("\nProject Marks cannot exceed 20\n");
+                    }
+                    else
+                    {
+                        printf("\nFinal Exam: ");
+                        scanf("%f",&student.finalExam_marks);
+                        if (student.finalExam_marks > 50)
+                        {
+                            printf("\nFinal Exam Marks cannot exceed 50\n");
+                        }
+                        
+                    }
+                }
+            }
+            
             fprintf(fp,"\n===============================================================================\n");
             int write_ret1 = fprintf(fp,"\n Marks for the student with Index number %s\n",student.student_index);
             fprintf(fp,"===============================================================================\n");
