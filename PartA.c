@@ -14,6 +14,7 @@ struct student_marks
 };
 
 void update_student();
+void delete_student();
 
 int main()
 {
@@ -32,6 +33,11 @@ int main()
         update_student();
     }
 
+    else if (key == 'R')
+    {
+        delete_student();
+    }
+
     else
     {
         FILE* fp = fopen("marks.txt", "w+"); 
@@ -45,7 +51,7 @@ int main()
         }
         else
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++)
             {
                 struct student_marks student;
 
@@ -134,17 +140,31 @@ void update_student()
     struct student_marks student1;
     struct student_marks student2;
 
+    char buf[12];
+
     printf("\nEnter the Student's Index to be updated: ");
     scanf("%s",student_index);
 
-    while (fread(&student1,sizeof(struct student_marks),1,fp1))
+    while (EOF != fscanf(fp1,"%s",buf))
     {
-        if (student1.student_index != student_index)
+        if (buf == student_index)
         {
-            // Hnadle errors
-            fwrite(&student1,sizeof(struct student_marks),1,fp2);
-            // strcpy(student2.student_index,student_index);
+            break;
         }
+
+        else
+        {
+            continue;
+            int bytes_written = fprintf(fp2,"%s ",buf);
+            if (bytes_written == -1)
+            {
+                perror("temp.txt");
+                printf("\ntemp.txt cannot be written. Error no. is %d",errno);
+                exit(0);
+            }
+            printf("\nStudent cannot be found");
+        }
+        
     }
     Assignment1_update:
     printf("Assignment 01: ");
@@ -204,4 +224,9 @@ void update_student()
     fclose(fp2);
     remove("marks.txt");
     rename("temp.txt","marks.txt");
+}
+
+void delete_student()
+{
+
 }
