@@ -7,7 +7,6 @@
 
 struct student_marks
 {
-    int pos;
     char student_index[12]; // EG/XXXX/XXXX
     float assgnmt01_marks; // 15%
     float assgnmt02_marks; // 15%
@@ -56,7 +55,6 @@ int main()
             for (int i = 0; i < 2; i++)
             {
                 struct student_marks student;
-                student.pos = i + 1;
 
                 printf("Enter the Registration Number: ");
                 scanf("%s",student.student_index);
