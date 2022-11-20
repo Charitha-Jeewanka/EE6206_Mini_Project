@@ -52,7 +52,7 @@ int main()
         }
         else
         {
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 100; i++)
             {
                 struct student_marks student;
 
