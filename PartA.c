@@ -3,9 +3,11 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 struct student_marks
 {
+    int pos;
     char student_index[12]; // EG/XXXX/XXXX
     float assgnmt01_marks; // 15%
     float assgnmt02_marks; // 15%
@@ -54,6 +56,7 @@ int main()
             for (int i = 0; i < 2; i++)
             {
                 struct student_marks student;
+                student.pos = i + 1;
 
                 printf("Enter the Registration Number: ");
                 scanf("%s",student.student_index);
@@ -103,14 +106,9 @@ int main()
                 }
 
                 // Writing to file marks.txt
-                fprintf(fp,"\n===============================================================================\n");
-                int write_ret1 = fprintf(fp,"\n. Marks for the student with Index number %s\n",student.student_index);
-                fprintf(fp,"===============================================================================\n");
-                int write_ret2 = fprintf(fp,"\nAssignment 01: %f\n Assignment 02: %f\n Project: %f\n Final Exam: %f\n", student.assgnmt01_marks, student.assgnmt02_marks, student.project_marks, student.finalExam_marks);
-                
-                // int write_ret1 = fwrite(&student,sizeof(struct student_marks),1,fp);
+                int write_ret = fprintf(fp,"%s\t%.2f\t%.2f\t%.2f\t%.2f\n",student.student_index, student.assgnmt01_marks, student.assgnmt02_marks, student.project_marks, student.finalExam_marks);
 
-                if((write_ret1 < 0) || (write_ret2 < 0))
+                if(write_ret < 0)
                 {
                     // Error handling in writing
                     perror("fprintf: ");
@@ -138,9 +136,13 @@ void update_student()
 {
     FILE* fp1 = fopen("marks.txt", "r+");
     FILE* fp2 = fopen("temp.txt", "a+"); // Used for updating
-    char student_index[12];
     struct student_marks student1;
     struct student_marks student2;
+
+    char buffer[46]; // Buffer to store read data
+    char student_index[13]; // Buffer to store student index
+    char index_buffer[13];
+
 
     printf("\nEnter the Student's Index to be updated: ");
     scanf("%s",student_index);
@@ -153,14 +155,55 @@ void update_student()
         exit(0);
     }
 
-    while (fread(&student1,sizeof(struct student_marks),1,fp1));
+    if (fp2 == 0)
     {
-        if (student1.student_index != student_index)
+        // Error handling for file opening or creating
+        perror("Temp.txt");
+        printf("Temp.txt could not be opened for editing. Error number is %d\n",errno);
+        exit(0);
+    }
+
+    int match_bytes_read = fscanf(fp1,"%s",index_buffer);
+    if (match_bytes_read == -1)
+    {
+        // Error handling
+        perror("Marks.txt");
+        printf("Marks.txt could not be scanned for editing. Error number is %d\n",errno);
+        exit(0);
+    }
+    int compare = strcmp(student_index,index_buffer);
+    if (compare == 0)
+    {
+        printf("\n MATCH FOUND\n");
+    }
+    else
+    {
+        printf("\n MATCH NOT FOUND\n");
+    }
+
+
+    fseek(fp1,0,SEEK_SET); // Jump to initial point of file before reading
+
+    while (EOF != fscanf(fp1,"%s",buffer))
+    {
+        // char *ret = strstr(buffer,student_index);
+        // if (ret == NULL)
+        // {
+        //     printf("\n MATCH NOT FOUND\n");
+        // }
+        // else
+        // {
+        //     printf("\n MATCH FOUND. %s\n",ret);
+        // }
+        
+        int bytes_written = fprintf(fp2,"%s\t",buffer);
+        if (bytes_written == -1)
         {
-            fwrite(&student1,sizeof(struct student_marks),1,fp2);
+            perror("temp.txt");
+            printf("\ntemp.txt cannot be written. Error no. is %d",errno);
+            exit(0);
         }
     }
-    
     
     Assignment1_update:
     printf("Assignment 01: ");
@@ -200,10 +243,7 @@ void update_student()
         goto Final_update;
     }
 
-    fprintf(fp2,"\n Marks for the student with Index number %s\n",student_index);
-    fprintf(fp2,"===============================================================================\n");
-    int write_ret_update = fprintf(fp2,"\nAssignment 01: %f\n Assignment 02: %f\n Project: %f\n Final Exam: %f\n", student2.assgnmt01_marks, student2.assgnmt02_marks, student2.project_marks, student2.finalExam_marks);
-    // int write_ret_update = fwrite(&student2,sizeof(struct student_marks),1,fp2);     
+    int write_ret_update = fprintf(fp2,"%s\t%.2f\t%.2f\t%.2f\t%.2f\n",student_index, student2.assgnmt01_marks, student2.assgnmt02_marks, student2.project_marks, student2.finalExam_marks);    
     if(write_ret_update < 0)
     {
         // Error handling in writing
@@ -226,9 +266,13 @@ void delete_student()
 {
     FILE* fp1 = fopen("marks.txt", "r+");
     FILE* fp2 = fopen("temp.txt", "a+"); // Used for updating
-    char student_index[12];
     struct student_marks student1;
     struct student_marks student2;
+
+    char buffer[46]; // Buffer to store read data
+    char student_index[13]; // Buffer to store student index
+    char index_buffer[13];
+
 
     printf("\nEnter the Student's Index to be deleted: ");
     scanf("%s",student_index);
@@ -241,26 +285,43 @@ void delete_student()
         exit(0);
     }
 
-    while (fread(&student1,sizeof(struct student_marks),1,fp1));
+    if (fp2 == 0)
     {
-        if (student1.student_index != student_index)
+        // Error handling for file opening or creating
+        perror("Temp.txt");
+        printf("Temp.txt could not be opened for editing. Error number is %d\n",errno);
+        exit(0);
+    }
+
+    int match_bytes_read = fscanf(fp1,"%s",index_buffer);
+    if (match_bytes_read == -1)
+    {
+        // Error handling
+        perror("Marks.txt");
+        printf("Marks.txt could not be scanned for editing. Error number is %d\n",errno);
+        exit(0);
+    }
+    int compare = strcmp(student_index,index_buffer);
+    if (compare == 0)
+    {
+        printf("\n MATCH FOUND\n");
+    }
+    else
+    {
+        printf("\n MATCH NOT FOUND\n");
+    }
+
+
+    fseek(fp1,30,SEEK_CUR); // Continue writing after match
+
+    while (EOF != fscanf(fp1,"%s",buffer))
+    {
+        int bytes_written = fprintf(fp2,"%s\t",buffer);
+        if (bytes_written == -1)
         {
-            fwrite(&student1,sizeof(struct student_marks),1,fp2);
-            fprintf(fp2,"\n Marks for the student with Index number %s\n",student_index);
-            fprintf(fp2,"===============================================================================\n");
-            int write_ret_update = fprintf(fp2,"\nAssignment 01: %f\n Assignment 02: %f\n Project: %f\n Final Exam: %f\n", student2.assgnmt01_marks, student2.assgnmt02_marks, student2.project_marks, student2.finalExam_marks);
-            // int write_ret_update = fwrite(&student2,sizeof(struct student_marks),1,fp2);     
-            if(write_ret_update < 0)
-            {
-                // Error handling in writing
-                perror("fwrite: ");
-                printf("Updating file error. Error no. %d \n",errno);
-                exit(0);
-            }
-            else
-            {
-                printf("\nSuccessfully updated to file.");
-            }
+            perror("temp.txt");
+            printf("\ntemp.txt cannot be written. Error no. is %d",errno);
+            exit(0);
         }
     }
 
