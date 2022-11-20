@@ -104,10 +104,12 @@ int main()
 
                 // Writing to file marks.txt
                 fprintf(fp,"\n===============================================================================\n");
-                int write_ret1 = fprintf(fp,"\n Marks for the student with Index number %s\n",student.student_index);
+                int write_ret1 = fprintf(fp,"\n. Marks for the student with Index number %s\n",student.student_index);
                 fprintf(fp,"===============================================================================\n");
                 int write_ret2 = fprintf(fp,"\nAssignment 01: %f\n Assignment 02: %f\n Project: %f\n Final Exam: %f\n", student.assgnmt01_marks, student.assgnmt02_marks, student.project_marks, student.finalExam_marks);
                 
+                // int write_ret1 = fwrite(&student,sizeof(struct student_marks),1,fp);
+
                 if((write_ret1 < 0) || (write_ret2 < 0))
                 {
                     // Error handling in writing
@@ -134,38 +136,32 @@ int main()
 
 void update_student()
 {
-    FILE* fp1 = fopen("marks.txt", "w+");
+    FILE* fp1 = fopen("marks.txt", "r+");
     FILE* fp2 = fopen("temp.txt", "a+"); // Used for updating
     char student_index[12];
     struct student_marks student1;
     struct student_marks student2;
 
-    char buf[12];
-
     printf("\nEnter the Student's Index to be updated: ");
     scanf("%s",student_index);
 
-    while (EOF != fscanf(fp1,"%s",buf))
+    if (fp1 == 0)
     {
-        if (buf == student_index)
-        {
-            break;
-        }
-
-        else
-        {
-            continue;
-            int bytes_written = fprintf(fp2,"%s ",buf);
-            if (bytes_written == -1)
-            {
-                perror("temp.txt");
-                printf("\ntemp.txt cannot be written. Error no. is %d",errno);
-                exit(0);
-            }
-            printf("\nStudent cannot be found");
-        }
-        
+        // Error handling for file opening or creating
+        perror("Marks.txt");
+        printf("Marks.txt could not be opened for editing. Error number is %d\n",errno);
+        exit(0);
     }
+
+    while (fread(&student1,sizeof(struct student_marks),1,fp1));
+    {
+        if (student1.student_index != student_index)
+        {
+            fwrite(&student1,sizeof(struct student_marks),1,fp2);
+        }
+    }
+    
+    
     Assignment1_update:
     printf("Assignment 01: ");
     scanf("%f",&student2.assgnmt01_marks);
@@ -228,5 +224,48 @@ void update_student()
 
 void delete_student()
 {
+    FILE* fp1 = fopen("marks.txt", "r+");
+    FILE* fp2 = fopen("temp.txt", "a+"); // Used for updating
+    char student_index[12];
+    struct student_marks student1;
+    struct student_marks student2;
 
+    printf("\nEnter the Student's Index to be deleted: ");
+    scanf("%s",student_index);
+
+    if (fp1 == 0)
+    {
+        // Error handling for file opening or creating
+        perror("Marks.txt");
+        printf("Marks.txt could not be opened for editing. Error number is %d\n",errno);
+        exit(0);
+    }
+
+    while (fread(&student1,sizeof(struct student_marks),1,fp1));
+    {
+        if (student1.student_index != student_index)
+        {
+            fwrite(&student1,sizeof(struct student_marks),1,fp2);
+            fprintf(fp2,"\n Marks for the student with Index number %s\n",student_index);
+            fprintf(fp2,"===============================================================================\n");
+            int write_ret_update = fprintf(fp2,"\nAssignment 01: %f\n Assignment 02: %f\n Project: %f\n Final Exam: %f\n", student2.assgnmt01_marks, student2.assgnmt02_marks, student2.project_marks, student2.finalExam_marks);
+            // int write_ret_update = fwrite(&student2,sizeof(struct student_marks),1,fp2);     
+            if(write_ret_update < 0)
+            {
+                // Error handling in writing
+                perror("fwrite: ");
+                printf("Updating file error. Error no. %d \n",errno);
+                exit(0);
+            }
+            else
+            {
+                printf("\nSuccessfully updated to file.");
+            }
+        }
+    }
+
+    fclose(fp1);
+    fclose(fp2);
+    remove("marks.txt");
+    rename("temp.txt","marks.txt");
 }
