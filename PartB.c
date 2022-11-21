@@ -1,11 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <sys/stat.h>
 #include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
+#define LINE_SIZE 50
+
+typedef struct 
+{
+    char student_index[20]; //EG/XXXX/XXXX
+    float assgnmt01_marks; //15%
+    float assgnmt02_marks; //15%
+    float project_marks; //20%
+    float finalExam_marks; //50%
+
+}student_marks;
 
 int main()
 {
 	int pid, pid1, pid2, pid3;
+    FILE* fp = fopen("marks.txt", "r+");
+    if (fp == 0)
+    {
+        // Error handling for file opening or creating
+        perror("Marks.txt");
+        printf("Marks.txt could not be opened for reading. Error number is %d\n",errno);
+        exit(0);
+    }
+    ////////////////////////////////////////////////////////////////////////////
+    char line[LINE_SIZE];
+
+    while(!feof(fp)) 
+    {
+        student_marks *n= (student_marks*)malloc(sizeof(student_marks));             
+        fscanf(fp,"%s\t%f\t%f\t%f\t%f", n->student_index, &n->assgnmt01_marks, &n->assgnmt02_marks, &n->project_marks,&n->finalExam_marks);
+        printf("%f\n",n->assgnmt02_marks); 
+    }   
+
+    ///////////////////////////////////////////////////////////////////////////
 
 	pid = fork();
     if (pid == -1)
@@ -55,7 +88,7 @@ int main()
 
 			else 
             {
-				sleep(3);
+				
 				printf("CC1P--> pid = %d\n", getpid());
 			}
 		}
@@ -83,6 +116,8 @@ int main()
 			}
 		}
 	}
+
+    fclose(fp);
 
 	return 0;
 }
