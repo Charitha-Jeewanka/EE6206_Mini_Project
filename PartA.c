@@ -7,6 +7,7 @@
 
 struct student_marks
 {
+    
     char student_index[12]; // EG/XXXX/XXXX
     float assgnmt01_marks; // 15%
     float assgnmt02_marks; // 15%
@@ -55,6 +56,7 @@ int main()
             for (int i = 0; i < 100; i++)
             {
                 struct student_marks student;
+                
 
                 printf("Enter the Registration Number: ");
                 scanf("%s",student.student_index);
@@ -184,15 +186,6 @@ void update_student()
 
     while (EOF != fscanf(fp1,"%s",buffer))
     {
-        // char *ret = strstr(buffer,student_index);
-        // if (ret == NULL)
-        // {
-        //     printf("\n MATCH NOT FOUND\n");
-        // }
-        // else
-        // {
-        //     printf("\n MATCH FOUND. %s\n",ret);
-        // }
         
         int bytes_written = fprintf(fp2,"%s\t",buffer);
         if (bytes_written == -1)

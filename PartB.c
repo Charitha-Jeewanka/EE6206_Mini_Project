@@ -60,7 +60,7 @@ int main()
 
     shmp = (student_marks *)shmat(SMID,NULL,SHM_R|SHM_W); // Attach to shared memory
 
-    //////////////////////////////////////////////////////////////////////////////////
+    ///////////////Processes/////////////////////////
 	pid = fork();
     if (pid == -1)
     {
@@ -199,13 +199,6 @@ int main()
 			}
 		}
 	}
-
-    int shmCtl = shmctl(SMID,IPC_RMID,NULL); // Destroy shared memory
-    if (shmCtl == -1){
-        perror("shmctl error: ");
-        printf("Error No: %d\n",errno);
-        exit(0);
-    }
 
     fclose(fp);
 
