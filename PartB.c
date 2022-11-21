@@ -189,7 +189,7 @@ int main()
                     i++;
                 }
 
-                printf("No of students above 10%% is %d",count);
+                printf("No of students above 10%% is %d\n",count);
                 if(shmdt(shmp) == -1) // Detach from shaerd memory
                 {
                     perror("shmdt error: ");
@@ -199,6 +199,13 @@ int main()
 			}
 		}
 	}
+
+    int shmCtl = shmctl(SMID,IPC_RMID,NULL); // Destroy shared memory
+    if (shmCtl == -1){
+        perror("shmctl error: ");
+        printf("Error No: %d\n",errno);
+        exit(0);
+    }
 
     fclose(fp);
 
