@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <errno.h>
-#include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define LINE_SIZE 50
+#define LENGTH 100
 
 typedef struct 
 {
@@ -19,7 +24,14 @@ typedef struct
 
 int main()
 {
-	int pid, pid1, pid2, pid3;
+	pid_t pid, pid1, pid2, pid3;
+    student_marks *shmp;
+
+    float sum = 0;
+    float avg = 0;
+    float min;
+    float max;
+
     FILE* fp = fopen("marks.txt", "r+");
     if (fp == 0)
     {
@@ -28,18 +40,27 @@ int main()
         printf("Marks.txt could not be opened for reading. Error number is %d\n",errno);
         exit(0);
     }
-    ////////////////////////////////////////////////////////////////////////////
-    char line[LINE_SIZE];
 
-    while(!feof(fp)) 
+    // Create file token
+    key_t ky = ftok("marks.txt",89);
+    if (ky == -1){
+        perror("ftok error: ");
+        printf("Error No: %d\n",errno);
+        exit(1);
+    }
+
+    int SMID = shmget(ky,sizeof(student_marks*)*LENGTH,IPC_CREAT|0666);
+
+    if (SMID == -1)
     {
-        student_marks *n= (student_marks*)malloc(sizeof(student_marks));             
-        fscanf(fp,"%s\t%f\t%f\t%f\t%f", n->student_index, &n->assgnmt01_marks, &n->assgnmt02_marks, &n->project_marks,&n->finalExam_marks);
-        printf("%f\n",n->assgnmt02_marks); 
-    }   
+        perror("shmget error: ");
+        printf("Error No: %d\n",errno);
+        exit(1);
+    }
 
-    ///////////////////////////////////////////////////////////////////////////
+    shmp = (student_marks *)shmat(SMID,NULL,SHM_R|SHM_W); // Attach to shared memory
 
+    //////////////////////////////////////////////////////////////////////////////////
 	pid = fork();
     if (pid == -1)
     {
@@ -49,10 +70,22 @@ int main()
         exit(0);
     
     }
-	else if (pid == 0) 
+	else if (pid == 0) // C1
     {
-		sleep(3);
-		printf("C1 --> pid = %d and ppid = %d\n",getpid(), getppid());
+        if (shmp == (void *)-1)
+        {
+            perror("shmat error: ");
+            printf("Error No: %d\n",errno);
+            exit(1);
+        }
+
+        for (int i = 0; i < LENGTH; i++)
+        {
+            student_marks *n= (student_marks*)malloc(sizeof(student_marks));             
+            fscanf(fp,"%s\t%f\t%f\t%f\t%f", n->student_index, &n->assgnmt01_marks, &n->assgnmt02_marks, &n->project_marks,&n->finalExam_marks);
+            shmp[i].assgnmt02_marks = n->assgnmt02_marks;
+        }
+        
 	}
 
 	else 
@@ -66,11 +99,8 @@ int main()
             exit(0);
         
         }
-		else if (pid1 == 0) 
+		else if (pid1 == 0) // C2
         {
-
-			sleep(2);
-			printf("C2--> pid = %d and ppid = %d\n",getpid(), getppid());
             pid3 = fork();
             if (pid3 == -1)
             {
@@ -81,16 +111,37 @@ int main()
             
             }
 
-			else if (pid3 == 0) 
+			else if (pid3 == 0) // CC1
             {
-				printf("CC1 --> pid = %d and ppid = %d\n",getpid(), getppid());
+                int i = 0;
+                min = shmp[0].assgnmt02_marks;
+				while (i < LENGTH)
+                {
+                    if (shmp[i].assgnmt02_marks < min)
+                    {
+                        min = shmp[i].assgnmt02_marks;
+                    }
+                    i++;
+                }
+                printf("Minimum: %f\n",min);
 			}
 
 			else 
             {
-				
-				printf("CC1P--> pid = %d\n", getpid());
+                int i = 0;
+                max = shmp[0].assgnmt02_marks;
+				while (i < LENGTH)
+                {
+                    if (shmp[i].assgnmt02_marks > max)
+                    {
+                        max = shmp[i].assgnmt02_marks;
+                    }
+                    i++;
+                }
+                printf("Maximum: %f\n",max);
 			}
+
+            
 		}
 		else 
         {
@@ -104,15 +155,47 @@ int main()
             
             }
 
-			else if (pid2 == 0) 
+			else if (pid2 == 0) // C3
             {
-				printf("C3 --> pid = %d and ppid = %d\n",getpid(), getppid());
+                int i = 0;
+                while (i < LENGTH)
+                {
+                    sum += shmp[i].assgnmt02_marks;
+                    i++;
+                }
+                // printf("Sum = %f\n",sum);
+                avg = sum/100;
+                printf("Average = %f\n",avg);
+                
 			}
 
 			else 
             {
-				sleep(3);
-				printf("P--> pid = %d\n", getpid());
+				pid_t wpidRet = waitpid(pid,NULL,0);
+                if (wpidRet == -1)
+                {
+                    perror("waitpid error: ");
+                    printf("Error No: %d\n",errno);
+                    exit(0);
+                }
+                int i = 0;
+                int count = 0;
+                while (i < LENGTH)
+                {
+                    if (shmp[i].assgnmt02_marks < 1.50)
+                    {
+                        count++;
+                    }
+                    i++;
+                }
+
+                printf("No of students above 10%% is %d",count);
+                if(shmdt(shmp) == -1) // Detach from shaerd memory
+                {
+                    perror("shmdt error: ");
+                    printf("Error No: %d\n",errno);
+                    exit(1);
+                }
 			}
 		}
 	}
